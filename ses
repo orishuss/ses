@@ -1,0 +1,29 @@
+#!/bin/bash
+
+workspaces="$(tmuxinator list | tail -n+2)"
+read -rd '' -a workspaces_list <<< "$workspaces"
+workspace="$1"
+if [ -z "$workspace" ]; then
+    workspace="$(zenity --title="Choose Workspace" --list --column="Workspaces" \
+                 "${workspaces_list[@]}" \
+                 --height 600 --width 350 \
+                 --text="Choose a workspace to load." 2>/dev/null)"
+fi
+if [ -z "$workspace" ]; then
+    exit 1
+fi
+
+workspace_exists=false
+for w in ${workspaces_list[@]}; do
+    if [ "$w" == "$workspace" ]; then
+        workspace_exists=true
+    fi
+done
+
+if [[ $workspace_exists == false ]]; then
+    zenity --error --text "Workspace \"""$workspace""\" doesn't exist." \
+           --width 400 --height 100
+    exit 1
+fi
+
+terminator -e "tmuxinator $workspace"
